@@ -11,6 +11,8 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from src.rag.chain import build_rag_chain
 
+print("Loading vector database...\n")
+
 # Load the saved Vector DB
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 vectorstore = Chroma(
@@ -23,15 +25,16 @@ chain = build_rag_chain(vectorstore)
 
 # Test questions
 questions = [
-    "How do I launch an EC2 instance?",
-    "What's the deployment process for production?",
-    "What's good for lunch?",  # ← This should return "No matching information found"
+    "What is this document about?",
+    "What information is in the CSV file?",
+    "What does the paper discuss?",
 ]
 
 for q in questions:
     print(f"\n{'='*60}")
     print(f"Question: {q}")
     print(f"{'='*60}")
-    result = chain.invoke({"input": q})
-    print(f"Answer: {result['answer']}")
-    print(f"\nSources: {[doc.metadata.get('source', 'unknown') for doc in result['context']]}")
+    
+    # The chain returns just the answer string
+    answer = chain.invoke(q)
+    print(f"Answer: {answer}")

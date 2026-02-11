@@ -1,9 +1,9 @@
 # src/rag/chain.py
 
 from langchain_anthropic import ChatAnthropic
-from langchain.chains.retrieval import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 
 llm = ChatAnthropic(model="claude-sonnet-4-5-20250929")
 
@@ -19,12 +19,21 @@ Question: {input}
 Answer:
 """)
 
-document_chain = create_stuff_documents_chain(llm, prompt)
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
 
 def build_rag_chain(vectorstore):
-    """Create a retrieval chain from a vectorstore"""
-    retrieval_chain = create_retrieval_chain(
-        vectorstore.as_retriever(search_kwargs={"k": 5}),
-        document_chain
+    """Create a RAG chain from a vectorstore"""
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+    
+    chain = (
+        {
+            "context": retriever | format_docs,
+            "input": RunnablePassthrough()
+        }
+        | prompt
+        | llm
+        | StrOutputParser()
     )
-    return retrieval_chain
+    
+    return chain
