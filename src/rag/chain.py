@@ -1,9 +1,11 @@
+# src/rag/chain.py
+
 from langchain_anthropic import ChatAnthropic
-from langchain.chains import create_retrieval_chain
+from langchain.chains.retrieval import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 
-llm = ChatAnthropic(model="claude-sonnet-4-5-20250929") # or sonnet-4-6 available?
+llm = ChatAnthropic(model="claude-sonnet-4-5-20250929")
 
 prompt = ChatPromptTemplate.from_template("""
 Answer the question using the context below.
@@ -18,7 +20,11 @@ Answer:
 """)
 
 document_chain = create_stuff_documents_chain(llm, prompt)
-retrieval_chain = create_retrieval_chain(
-    vectorstore.as_retriever(search_kwargs={"k": 5}),
-    document_chain
-)
+
+def build_rag_chain(vectorstore):
+    """Create a retrieval chain from a vectorstore"""
+    retrieval_chain = create_retrieval_chain(
+        vectorstore.as_retriever(search_kwargs={"k": 5}),
+        document_chain
+    )
+    return retrieval_chain

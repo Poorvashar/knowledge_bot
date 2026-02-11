@@ -1,10 +1,9 @@
-# src/data_sources/google_drive.py
-
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 import io
 import os
+
 
 def get_drive_service():
     """Set up connection to Google Drive API"""
