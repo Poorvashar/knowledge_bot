@@ -13,9 +13,9 @@ class SimpleHybridRetriever:
     
     def get_relevant_documents(self, query):
         """Get documents from both retrievers and merge"""
-        # Get results from both
-        bm25_docs = self.bm25_retriever.get_relevant_documents(query)
-        vector_docs = self.vector_retriever.get_relevant_documents(query)
+        # Use invoke() instead of _get_relevant_documents()
+        bm25_docs = self.bm25_retriever.invoke(query)
+        vector_docs = self.vector_retriever.invoke(query)
         
         # Combine and deduplicate
         all_docs = bm25_docs + vector_docs
@@ -23,27 +23,19 @@ class SimpleHybridRetriever:
         unique_docs = []
         
         for doc in all_docs:
-            # Use content hash to detect duplicates
             content_hash = hash(doc.page_content)
             if content_hash not in seen:
                 seen.add(content_hash)
                 unique_docs.append(doc)
         
-        return unique_docs[:5]  # Return top 5
+        return unique_docs[:5]
     
     def invoke(self, query):
         """LangChain-compatible invoke method"""
         return self.get_relevant_documents(query)
 
 def create_hybrid_retriever(vectorstore, documents, k=5):
-    """
-    Create a hybrid retriever combining BM25 and vector search
-    
-    Args:
-        vectorstore: Chroma vector store
-        documents: List of LangChain documents (for BM25)
-        k: Number of results to return
-    """
+    """Create a hybrid retriever combining BM25 and vector search"""
     
     # BM25 Retriever (keyword search)
     bm25_retriever = BM25Retriever.from_documents(documents)
@@ -56,7 +48,7 @@ def create_hybrid_retriever(vectorstore, documents, k=5):
     hybrid_retriever = SimpleHybridRetriever(
         bm25_retriever=bm25_retriever,
         vector_retriever=vector_retriever,
-        bm25_weight=0.4  # 40% BM25, 60% vector
+        bm25_weight=0.4
     )
     
     return hybrid_retriever
